@@ -15,11 +15,11 @@ class ProductController extends Controller
                 "brand" => "required",
                 "description" => "required",
                 "price" => "required",
-                "imagePath" => "required|image",
+                "image" => "required|image",
             ]);
 
             if($validate->fails()){
-                return response()->json(['error'=>$validate->errors()->all()],409);
+                return response()->json(['error'=> $validate->errors()->all()],409);
             }
 
             $product = new Product();
@@ -31,16 +31,18 @@ class ProductController extends Controller
             $product->save();
 
             //file
-            $url = "http:localhost/8000/storage";
+            $url = "http:localhost:8000/storage/";
             $file = $request->file("image");
             $extension = $file -> getClientOriginalExtension();
             $path = $request->file("image")->storeAs("proimages", $product->id.".".$extension);
             $product->image = $path;
             $product-> imagePath = $url.$path;
             $product->save();
+
+            return response()->json(["message"=> "Product has been successfully added"]); 
         }
 
-    public function update(Request $request){
+    public function update(Request $request){   
         $validate  = Validator::make($request->all(),[
             "name" => "required",
             "category" => "required",
@@ -55,7 +57,7 @@ class ProductController extends Controller
             return response()->json(['error'=>$validate->errors()->all()],409);
         }
         
-        $product = Product::find($request->$id);
+        $product = Product::find($request->id);
         $product->name = $request->name;
         $product->category = $request->category;
         $product->brand = $request->brand;
@@ -75,7 +77,7 @@ class ProductController extends Controller
             return response()->json(['error'=>$validate->errors()->all()],409);
         }
         
-        $product = Product::find($request->$id)->delete();
+        $product = Product::find($request->id)->delete();
         return response()->json(["message"=> "Product has been successfully deleted"]);
     }
 
@@ -89,6 +91,7 @@ class ProductController extends Controller
                 ->orwhere("products.category",'LIKE','%'.session("keys").'%')
                 ->orwhere("products.brand",'LIKE','%'.session("keys").'%');
         })->select("products.*")->get();
+
         return response()->json(["products"=>$products]);
     }
     
